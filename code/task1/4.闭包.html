@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+
+
+    <script>
+
+        // 使用浏览器的断点调试知道闭包是什么时候产生的 
+        // Call Stack       执行栈
+        // Scope            作用域
+        // Closure          闭包            power2 第二次执行的时候会产生闭包
+
+        // Math.pow(2,2);
+        // Math.pow(3,2);
+
+        // 利用闭包生成求几次方的方法
+        function makePower(power) {
+            return function (num) {
+                return Math.pow(num, power);
+            }
+        }
+
+        let power2 = makePower(2);      // 求莫个数的2次方
+        console.log(power2(2));     // 2的2次方 
+        console.log(power2(3));     // 3的2次方
+
+
+    </script>
+</body>
+
+</html>
