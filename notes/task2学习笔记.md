@@ -64,6 +64,60 @@ js 实现异步编程的根本方式就是回调函数
 
 ## 1.4 Promise
 
+1. 为什么会出现 Promise
+   - 解决异步编程的回调地狱问题
+   - 可以同时获取多个异步任务的结果
+2. Promise 其实就是一个对象,表示异步任务最终结果是成功还是失败。内部对外界做出了一个承诺，一开始这个承诺是等待状态(Pending),最终可能转换成成功态(Fulfilled)或者 Rejected(失败态),在承诺状态确定之后都会有相对应的任务会被自动执行。这个承诺有个特点就是一旦确定状态之后就不能更改。
+3. promise 的误区
+
+- 嵌套使用的方式是使用 Promise 最常见的错误。正确的做法是借助于 Promise then 方法链式调用的特点，
+
+4. 链式调用 then
+
+- 每个 then 会返回一个 全新的 Promise 对象
+- 后面的 then 方法就是为上一个 then 返回的 Promise 注册回调
+- 前面 then 方法中回调函数的返回值会作为后面 then 方法回调的参数- 如果回调中返回的是 Promise, 那后面的 then 方法的回调会等待它的结束
+
+5. 异常处理 then(null,onRejected)/catch
+
+- onRejected 方法只能捕获到上一个 then 返回的错误信息
+- catch 可以捕获前面所有 then 没有捕获的错误信息
+- catch 方法就是 then 方法的值穿透
+- 在代码中明确捕获每一个可能的异常，而不是全局处理异常 (监听 UnhandledPromiseRejection)
+
+6. 静态方法
+
+- resolve 方法 返回的是一个 成功态的 Promise 对象
+- reject 方法 返回的是一个 失败态的 Promise 对象
+
+7. 并行处理
+
+Promise.all 拿到所有结果/第一个 promise 失败的结果
+
+> - 同步执行所有 promise ，所有 promise 全部是成功态, 才将所有 promise 的 执行的结果返回出来
+> - 只要有一个 promise 是失败态就直接返回失败态的结果，不会影响其他的 promise 执行
+
+Promise.race 谁执行快就返回谁
+
+> - 同步执行所有 promise , 谁执行的快就返回哪个 promise 对象, 不管状态是成功态还是失败态
+
+8. Promise 执行时序/ 宏任务 vs 微任务
+
+- 微任务在宏任务之前执行
+- 同步任务 > 微任务 > 宏任务
+
+9. 宏任务和微任务的差异
+
+- 回调队列中的任务称之为 宏任务
+- 宏任务执行过程中可以临时加上一些额外需求 (宏任务和微任务的差异)
+
+  - 对于这些额外需求，可以选择作为一个新的宏任务进到队列中排队 (setTimeout 就会再次去队列中排队)
+  - 也可以当作当前任务的 微任务 直接在当前任务结束后立即执行 (promise/MutationObserver/process.nextTick)
+
+10. 微任务的好处
+
+- 提高整体的响应能力 (加一些额外需求)
+
 ## 1.4 Promise 异步方案、宏任务/微任务队列
 
 ## 1.5 Generator 异步方案、Async/Await 语法糖
