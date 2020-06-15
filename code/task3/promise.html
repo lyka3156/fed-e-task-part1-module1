@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      var promise = new Promise(function (resolve, reject) {
+        resolve("成功");
+      });
+      var promise1 = promise.then(
+        (value) => {
+          console.log(value);
+          return promise1;
+          //   setTimeout(() => {
+          //     return promise1;
+          //   }, 0);
+          //   setTimeout(() => {
+          //     return "我";
+          //   }, 0);
+        },
+        (err) => {
+          console.log(err);
+        }
+      );
+      promise1.then(
+        (value) => {
+          console.log(value);
+        },
+        (err) => {
+          console.log(err);
+          console.log(err.message);
+        }
+      );
+    </script>
+  </body>
+</html>

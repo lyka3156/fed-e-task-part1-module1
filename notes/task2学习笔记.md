@@ -94,7 +94,8 @@ js 实现异步编程的根本方式就是回调函数
 
 Promise.all 拿到所有结果/第一个 promise 失败的结果
 
-> - 同步执行所有 promise ，所有 promise 全部是成功态, 才将所有 promise 的 执行的结果返回出来
+> - 同步执行所有 promise ，所有 promise 全部是成功态, 才将所有 promise 的 执行的结果返回出来, 并且每一项的结果和 promise 数组的每一项对应起来。
+> - 如果数组里面不上 promise 对象就直接返回
 > - 只要有一个 promise 是失败态就直接返回失败态的结果，不会影响其他的 promise 执行
 
 Promise.race 谁执行快就返回谁
