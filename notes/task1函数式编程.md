@@ -132,8 +132,91 @@ lodash 中的函数组合
 
 - 有 f,g,h 三个函数， 我们即可以把 g 和 h 组合，还可以把 f 和 g 组合, 结果都是一样
 
-## 1.2 函数式编程的应用场景
+## 1.2 函数式编程库
 
-## 1.3 函数式编程库
+### 1.2.1 [Lodash 库](https://www.lodashjs.com/)
 
-### 1.3.1 [Lodash 库](https://www.lodashjs.com/)
+1. lodash 模块
+
+- 不可变，数据优先，函数之后
+
+2. lodash/fp
+
+- lodash 的 fp 模块提供了实用的对<font color="red" size=4>函数式编程友好</font>的方法
+- 提供了 auto-curried(可变) iteratee-first(函数优先) data-last(数据之后) 的方法
+- fp 模块中的函数 都是 被柯里化的函数 (例如:map,split)
+
+```js
+// lodash 模块
+const _ = require("lodash");
+_.map(["a"], _.toUpper); // 数据优先，函数之后
+
+const fp = require("lodash/fp");
+fp.map(_.toUpper, ["a"]); // 函数优先，数据之后
+fp.map(_toUpper)(["a"]); // fp 的 map方法是柯里化的函数
+```
+
+## 1.3 其他方式
+
+### 1.3.1 Point Free
+
+- Point Free 是一种编程风格，具体的实现是函数的组合
+- Point Free: 我们可以把数据处理的过程定义成与数据无关的合成运算，不需要用到代表数据的那个参数，只要把简单的运算步骤合成到一起，在使用这种模式之前我们需要定义一些辅助的基本运算函数。
+  - 不需要指明处理的数据
+  - <font color="red">只需要合成运算过程</font>
+  - 需要定义一些辅助的基本运算函数
+
+```js
+// 非 Point Free 模式
+// Hello World => hello_word
+function f(word) {
+  return word.toLowerCase().replace(/\s+/g, "_");
+}
+// Point Free 模式
+const fp = require("lodash/fp");
+
+// 需要定义一些辅助的基本运算函数 fp.replace,fp.replace fp.toLower
+const f = fp.flowRight(fp.replace(/\s+/g, "_"), fp.toLower);
+// 不需要用到代表数据的那个参数,只要把简单的运算步骤合成到一起
+console.log(f("Hello World"));
+```
+
+## 1.4 函子 (Functor)
+
+### 1.4.1 Functor 函子
+
+<font size=3>为什么要学习函子</font>
+
+到目前为止已经学习了函数式编程的一些基础，但是我们还没有演示在函数式编程中如何把副作用控制在可控的范围内、异常处理、异步操作等。
+
+<font size=3>什么是函子</font>
+
+- 容器: 包含值和值的变形关系(这个变形关系就是函数) 简单点说就是包含了值和处理这个值的函数
+- 函子: 是一个特殊的容器，通过一个普通的对象来实现，该对象具有 map 方法，map 方法接收一个参数，这个参数是对值处理的函数(变形关系)
+
+<font size=3>函子的实现方式</font>
+
+> 1. 维护一个值，不对外公布
+> 2. 对外提供一个 map，map 方法接受一个处理值的函数
+>    调用 map 方法的时候，会调用这个处理值的函数去处理值
+>    并且把处理后的结果传递给新的函子,由新的函子保存
+
+<font size=3>总结</font>
+
+- 函数式编程的运算不直接操作值，而是由函子操作
+- 函子就是一个实现了 map 契约的对象
+- 我们可以把函子想象成一个盒子，这个盒子里封装了一个值
+- 想要处理盒子中的值，我们需要给盒子的 map 方法传递一个处理值的函数（纯函数），由这个函数来对值进行处理
+- 最终 map 方法返回一个包含新值的盒子（函子）
+
+### 1.4.2 MayBe 函子
+
+- 我们在编程的过程中可能会遇到很多错误，需要对这些错误做相应的处理
+- MayBe 函子的作用就是可以对外部的空值情况做处理（控制副作用在允许的范围）
+
+### 1.4.3 Either 函子
+
+- Either 两者中的任何一个，类似于 if..else 的处理
+- 异常会让函数变的不纯，Either 函子可以用来做异常处理
+
+## 1.5 函数式编程的应用场景
