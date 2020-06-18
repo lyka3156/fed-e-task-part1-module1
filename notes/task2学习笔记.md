@@ -121,4 +121,97 @@ Promise.race 谁执行快就返回谁
 
 ## 1.4 Promise 异步方案、宏任务/微任务队列
 
-## 1.5 Generator 异步方案、Async/Await 语法糖
+1. 宏任务： 当前调用栈中执行的代码成为宏任务。（主代码快，定时器等等）
+2. 微任务： 当前（此次事件循环中）宏任务执行完，在下一个宏任务开始之前需要执行的任务,可以理解为回调事件。（promise.then，proness.nextTick 等等）。
+3. 宏任务执行过程中可以临时加上一些额外需求，对于这些额外需求，可以选择作为一个新的宏任务进到队列中排队 (setTimeout 就会再次去队列中排队)，也可以当作当前任务的 微任务 直接在当前任务结束后立即执行 (promise/MutationObserver/process.nextTick)
+4. 宏任务中的事件放在 callback queue 中，由事件触发线程维护；微任务的事件放在微任务队列中，由 js 引擎线程维护。
+
+## 1.5 Generator 异步方案
+
+generator 的特点
+
+1. 生成器函数 foo 执行后创建了生成器对象 generator
+2. generator 第一次执行 next 才会让 foo 函数执行，到 yield 关键词之前就暂停
+3. next 每次执行在遇到 yield 会暂停一下，直到执行完所有 yield,foo 才算执行完
+4. next 传递的参数会作为 yield 的返回值 (注意：第一次不会)
+5. generator 对象执行 throw 方法会抛出一个异常，可以在 foo 函数中 try catch 异常
+
+如何使用 generator 管理异步流程
+
+```js
+// 模拟ajax请求
+function ajax(url) {
+  // ......   异步操作逻辑
+  return new Promise((resolve, reject) => {
+    if (url.includes("json")) {
+      resolve(url + " 的请求结果");
+    } else {
+      reject("请求失败");
+    }
+  });
+}
+
+function* main() {
+  // 请求ajax,并且得到ajax的返回结果
+  // 通过这种方式可以让promise变的更像同步的代码
+  try {
+    const post1 = yield ajax("/1.json");
+    console.log(post1);
+
+    const post2 = yield ajax("/2.json");
+    console.log(post2);
+
+    const post3 = yield ajax("/3.js");
+    console.log(post3);
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+// 将下面的代码使用递归的方式写出来
+// 有个库就叫做co的库
+function co(generator) {
+  const g = generator(); // 得到生成器对象
+  // 递归执行生成器对象的next，直到done为true执行完成
+  function handleResult(result) {
+    if (result.done) return; // done属性为true，代表生成器结束了
+    result.value.then(
+      (data) => {
+        handleResult(g.next(data));
+      },
+      (error) => {
+        // promise请求失败的时候，给生成器抛出异常
+        g.throw(error);
+      }
+    );
+  }
+  handleResult(g.next());
+}
+co(main);
+```
+
+使用 generator+co 库让异步编程方案更加扁平化
+
+## 1.6 async/await 语法糖 等价于 (generator+co 库)
+
+不需要再配合一个 co 函数的执行器， 他是语言层面的标准编程语法，其次 async 还给我们返回一个 promise 对象,更有助于我们对代码的整体控制,await 只能出现在 async 函数内部
+
+```js
+async function main() {
+  // 请求ajax,并且得到ajax的返回结果
+  // 通过这种方式可以让promise变的更像同步的代码
+  try {
+    const post1 = await ajax("/1.json");
+    console.log(post1);
+
+    const post2 = await ajax("/2.json");
+    console.log(post2);
+
+    const post3 = await ajax("/3.js");
+    console.log(post3);
+  } catch (e) {
+    console.log(e);
+  }
+}
+main();
+```
