@@ -58,9 +58,9 @@ class MyPromise {
       });
 
     let promise2 = new MyPromise((resolve, reject) => {
-      // setTimeout的作用是为了拿到promise2的值   promise是微任务
-      process.nextTick(() => {
-        if (this.status === FULFILLED) {
+      if (this.status === FULFILLED) {
+        // setTimeout的作用是为了拿到promise2的值   promise是微任务
+        process.nextTick(() => {
           try {
             // 成功态调成功回调
             let x = succesCallback(this.value);
@@ -70,7 +70,10 @@ class MyPromise {
             console.log("---then执行的时候有错误---");
             reject(e);
           }
-        } else if (this.status === REJECTED) {
+        });
+      } else if (this.status === REJECTED) {
+        // setTimeout的作用是为了拿到promise2的值   promise是微任务
+        process.nextTick(() => {
           try {
             // 失败态调用失败的回调
             let x = failCallback(this.reason);
@@ -80,10 +83,13 @@ class MyPromise {
             console.log("---then执行的时候有错误---");
             reject(e);
           }
-        } else {
-          // resolve方法和reject方法在异步代码中执行  这时候状态是PENDING
-          // 将成功回调和失败回调存储起来, 等待resolve和reject执行的时候再执行对应的回调函数
-          this.succesCallback.push(() => {
+        });
+      } else {
+        // resolve方法和reject方法在异步代码中执行  这时候状态是PENDING
+        // 将成功回调和失败回调存储起来, 等待resolve和reject执行的时候再执行对应的回调函数
+        this.succesCallback.push(() => {
+          // setTimeout的作用是为了拿到promise2的值   promise是微任务
+          process.nextTick(() => {
             try {
               // 成功态调成功回调
               let x = succesCallback(this.value);
@@ -94,7 +100,10 @@ class MyPromise {
               reject(e);
             }
           });
-          this.failCallback.push(() => {
+        });
+        this.failCallback.push(() => {
+          // setTimeout的作用是为了拿到promise2的值   promise是微任务
+          process.nextTick(() => {
             try {
               // 失败态调失败回调
               let x = failCallback(this.reason);
@@ -105,8 +114,8 @@ class MyPromise {
               reject(e);
             }
           });
-        }
-      }, 0);
+        });
+      }
     });
     return promise2;
   }
@@ -114,13 +123,34 @@ class MyPromise {
   // finally方法
   // 不管是成功状态还是失败态都会进这个finally方法 (等待态不会进)
   finally(callback) {
-    return new Promise((resolve, reject) => {
-      try {
-        callback();
-        this.then(resolve, reject);
-      } catch (e) {
-        reject(e);
+    return this.then(
+      (value) => {
+        // 返回一个promise,然后执行then，回调里面的值是前一个then的返回结果
+        return MyPromise.resolve(callback()).then(() => value);
+      },
+      (err) => {
+        return MyPromise.resolve(callback()).then(() => {
+          throw err;
+        });
       }
+    );
+  }
+
+  // resolve方法 将状态转换成成功态的promise对象
+  static resolve(value) {
+    // 如果是一个promise对象就直接将这个对象返回
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve, reject) => {
+      resolve(value);
+    });
+  }
+
+  // reject方法 将状态转换成失败态的promise对象
+  static reject(value) {
+    // 如果是一个promise对象就直接将这个对象返回
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve, reject) => {
+      reject(value);
     });
   }
 
@@ -157,25 +187,11 @@ class MyPromise {
 
   // race方法， 谁执行的快就返回谁
   static race(array) {
-    return new Promise((resolve, reject) => {
+    return new MyPromise((resolve, reject) => {
       for (let i = 0, len = array.length; i < len; i++) {
         // 状态只能改变依次，所以同时执行then，谁快谁返回
         array[i].then(resolve, reject);
       }
-    });
-  }
-
-  // resolve方法 将状态转换成成功态的promise对象
-  static resolve(value) {
-    return new Promise((resolve, reject) => {
-      resolve(value);
-    });
-  }
-
-  // reject方法 将状态转换成失败态的promise对象
-  static reject(value) {
-    return new Promise((resolve, reject) => {
-      reject(value);
     });
   }
 }

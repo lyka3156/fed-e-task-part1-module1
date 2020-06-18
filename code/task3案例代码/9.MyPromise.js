@@ -114,14 +114,17 @@ class MyPromise {
   // finally方法
   // 不管是成功状态还是失败态都会进这个finally方法 (等待态不会进)
   finally(callback) {
-    return new Promise((resolve, reject) => {
-      try {
-        callback();
-        this.then(resolve, reject);
-      } catch (e) {
-        reject(e);
+    return this.then(
+      (value) => {
+        // 返回一个promise,然后执行then，回调里面的值是前一个then的返回结果
+        return MyPromise.resolve(callback()).then(() => value);
+      },
+      (err) => {
+        return MyPromise.resolve(callback()).then(() => {
+          throw err;
+        });
       }
-    });
+    );
   }
 
   // catch方法
@@ -173,14 +176,18 @@ class MyPromise {
 
   // resolve方法 将状态转换成成功态的promise对象
   static resolve(value) {
-    return new Promise((resolve, reject) => {
+    // 如果是一个promise对象就直接将这个对象返回
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve, reject) => {
       resolve(value);
     });
   }
 
   // reject方法 将状态转换成失败态的promise对象
   static reject(value) {
-    return new Promise((resolve, reject) => {
+    // 如果是一个promise对象就直接将这个对象返回
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve, reject) => {
       reject(value);
     });
   }

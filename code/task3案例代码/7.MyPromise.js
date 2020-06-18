@@ -154,14 +154,18 @@ class MyPromise {
 
   // resolve方法 将状态转换成成功态的promise对象
   static resolve(value) {
-    return new Promise((resolve, reject) => {
+    // 如果是一个promise对象就直接将这个对象返回
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve, reject) => {
       resolve(value);
     });
   }
 
   // reject方法 将状态转换成失败态的promise对象
   static reject(value) {
-    return new Promise((resolve, reject) => {
+    // 如果是一个promise对象就直接将这个对象返回
+    if (value instanceof MyPromise) return value;
+    return new MyPromise((resolve, reject) => {
       reject(value);
     });
   }
