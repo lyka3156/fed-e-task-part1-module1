@@ -56,24 +56,24 @@ class MyPromise {
       ((reason) => {
         throw reason;
       });
-
+    let self = this; // 当前then属于的promise对象本身
     let promise2 = new MyPromise((resolve, reject) => {
       // setTimeout的作用是为了拿到promise2的值   promise是微任务
       process.nextTick(() => {
-        if (this.status === FULFILLED) {
+        if (self.status === FULFILLED) {
           try {
             // 成功态调成功回调
-            let x = succesCallback(this.value);
+            let x = succesCallback(self.value);
             resolvePromise(promise2, x, resolve, reject);
           } catch (e) {
             // then执行的时候有错误直接reject，将下一个promise的状态改为失败态
             console.log("---then执行的时候有错误---");
             reject(e);
           }
-        } else if (this.status === REJECTED) {
+        } else if (self.status === REJECTED) {
           try {
             // 失败态调用失败的回调
-            let x = failCallback(this.reason);
+            let x = failCallback(self.reason);
             resolvePromise(promise2, x, resolve, reject);
           } catch (e) {
             // then执行的时候有错误直接reject，将下一个promise的状态改为失败态
@@ -83,10 +83,10 @@ class MyPromise {
         } else {
           // resolve方法和reject方法在异步代码中执行  这时候状态是PENDING
           // 将成功回调和失败回调存储起来, 等待resolve和reject执行的时候再执行对应的回调函数
-          this.succesCallback.push(() => {
+          self.succesCallback.push(() => {
             try {
               // 成功态调成功回调
-              let x = succesCallback(this.value);
+              let x = succesCallback(self.value);
               resolvePromise(promise2, x, resolve, reject);
             } catch (e) {
               // then执行的时候有错误直接reject，将下一个promise的状态改为失败态
@@ -94,10 +94,10 @@ class MyPromise {
               reject(e);
             }
           });
-          this.failCallback.push(() => {
+          self.failCallback.push(() => {
             try {
               // 失败态调失败回调
-              let x = failCallback(this.reason);
+              let x = failCallback(self.reason);
               resolvePromise(promise2, x, resolve, reject);
             } catch (e) {
               // then执行的时候有错误直接reject，将下一个promise的状态改为失败态
@@ -109,6 +109,25 @@ class MyPromise {
       }, 0);
     });
     return promise2;
+  }
+
+  // finally方法
+  // 不管是成功状态还是失败态都会进这个finally方法 (等待态不会进)
+  finally(callback) {
+    return new Promise((resolve, reject) => {
+      try {
+        callback();
+        this.then(resolve, reject);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  // catch方法
+  // catch方法相当于执行then方法的失败回调
+  catch(failCallback) {
+    return this.then(null, failCallback);
   }
 
   // 执行promise数组，并且返回所有结果
@@ -160,7 +179,7 @@ class MyPromise {
   }
 
   // reject方法 将状态转换成失败态的promise对象
-  static resolve(value) {
+  static reject(value) {
     return new Promise((resolve, reject) => {
       reject(value);
     });
